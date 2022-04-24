@@ -117,6 +117,8 @@ pub struct TXInstruction {
     pub keys: Vec<TXAccountMeta>,
     /// Opaque data passed to the instruction processor
     pub data: Vec<u8>,
+    /// Additional addresses that sign for things for a [SmartWallet]
+    pub partial_signers: Vec<PartialSigner>
 }
 
 impl TXInstruction {
@@ -125,6 +127,7 @@ impl TXInstruction {
         std::mem::size_of::<Pubkey>()
             + (self.keys.len() as usize) * std::mem::size_of::<TXAccountMeta>()
             + (self.data.len() as usize)
+            + (self.partial_signers.len() as usize) * std::mem::size_of::<PartialSigner>()
     }
 }
 
@@ -163,6 +166,15 @@ impl From<TXAccountMeta> for solana_program::instruction::AccountMeta {
             is_writable,
         }
     }
+}
+
+/// A partial signer that signs things for a [SmartWallet]
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Copy, Clone)]
+pub struct PartialSigner {
+    /// The partial signer index seed
+    pub index: u64,
+    /// The partial signer bump seed
+    pub bump: [u8; 1],
 }
 
 /// Type of Subaccount.

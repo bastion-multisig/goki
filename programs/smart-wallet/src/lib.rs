@@ -169,6 +169,20 @@ pub mod smart_wallet {
             invariant!(delay <= MAX_DELAY_SECONDS, DelayTooHigh);
         }
 
+        // validate partial signer seeds
+        for ix in instructions.iter() {
+            for signer in ix.partial_signers.iter() {
+                let (_partial_signer, partial_signer_bump) = Pubkey::find_program_address(&[
+                    b"GokiSmartWalletPartialSigner" as &[u8],   
+                    smart_wallet.key().as_ref(),
+                    bytemuck::bytes_of(&signer.index),
+                    &signer.bump
+                ], ctx.program_id);
+
+                invariant!(partial_signer_bump == signer.bump[0], InvalidPartialSignerBump)
+            }
+        }
+
         // generate the signers boolean list
         let owners = &smart_wallet.owners;
         let mut signers = Vec::new();
@@ -221,12 +235,12 @@ pub mod smart_wallet {
     #[access_control(ctx.accounts.validate())]
     pub fn execute_transaction(ctx: Context<ExecuteTransaction>) -> Result<()> {
         let smart_wallet = &ctx.accounts.smart_wallet;
-        let wallet_seeds: &[&[&[u8]]] = &[&[
+        let wallet_seed: &[&[u8]] = &[
             b"GokiSmartWallet" as &[u8],
             &smart_wallet.base.to_bytes(),
             &[smart_wallet.bump],
-        ]];
-        do_execute_transaction(ctx, wallet_seeds)
+        ];
+        do_execute_transaction(ctx, wallet_seed)
     }
 
     /// Executes the given transaction signed by the given derived address,
@@ -240,13 +254,13 @@ pub mod smart_wallet {
     ) -> Result<()> {
         let smart_wallet = &ctx.accounts.smart_wallet;
         // Execute the transaction signed by the smart_wallet.
-        let wallet_seeds: &[&[&[u8]]] = &[&[
+        let wallet_seed: &[&[u8]] = &[
             b"GokiSmartWalletDerived" as &[u8],
             &smart_wallet.key().to_bytes(),
             &index.to_le_bytes(),
             &[bump],
-        ]];
-        do_execute_transaction(ctx, wallet_seeds)
+        ];
+        do_execute_transaction(ctx, wallet_seed)
     }
 
     /// Invokes an arbitrary instruction as a PDA derived from the owner,
@@ -523,9 +537,24 @@ pub struct CreateSubaccountInfo<'info> {
     pub system_program: Program<'info, System>,
 }
 
-fn do_execute_transaction(ctx: Context<ExecuteTransaction>, seeds: &[&[&[u8]]]) -> Result<()> {
-    for ix in ctx.accounts.transaction.instructions.iter() {
-        solana_program::program::invoke_signed(&(ix).into(), ctx.remaining_accounts, seeds)?;
+fn do_execute_transaction(ctx: Context<ExecuteTransaction>, wallet_seed: &[&[u8]]) -> Result<()> {
+    let smart_wallet = ctx.accounts.smart_wallet.to_account_info();
+    for ix in ctx.accounts.transaction.instructions.iter() {     
+        let seeds: &Vec<Vec<_>> = &ix.partial_signers.iter()
+            .map(|signer| vec![
+                    b"GokiSmartWalletPartialSigner" as &[u8],   
+                    smart_wallet.key.as_ref(),
+                    bytemuck::bytes_of(&signer.index),
+                    &signer.bump
+                ]
+            )
+            .collect::<Vec<Vec<_>>>();
+
+        let seeds2 = seeds;
+        let mut seeds = seeds2.iter().map(|s| &s[..]).collect::<Vec<_>>();
+        seeds.push(wallet_seed);
+
+        solana_program::program::invoke_signed(&(ix).into(), ctx.remaining_accounts, &seeds)?;
     }
 
     // Burn the transaction to ensure one time use.
@@ -575,4 +604,6 @@ pub enum ErrorCode {
     BufferBundleNotFinalized,
     #[msg("Buffer bundle has already been executed.")]
     BufferBundleExecuted,
+    #[msg("Partial signer seeds do not lead to the provided bump.")]
+    InvalidPartialSignerBump,
 }

@@ -1058,6 +1058,7 @@ name = "smart-wallet"
 version = "0.10.4"
 dependencies = [
  "anchor-lang",
+ "bytemuck",
  "vipers",
 ]
 
