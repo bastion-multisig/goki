@@ -175,11 +175,10 @@ pub mod smart_wallet {
                 let (_partial_signer, partial_signer_bump) = Pubkey::find_program_address(&[
                     b"GokiSmartWalletPartialSigner" as &[u8],   
                     smart_wallet.key().as_ref(),
-                    bytemuck::bytes_of(&signer.index),
-                    &signer.bump
+                    bytemuck::bytes_of(&signer.index)
                 ], ctx.program_id);
 
-                invariant!(partial_signer_bump == signer.bump[0], InvalidPartialSignerBump)
+                invariant!(partial_signer_bump == signer.bump, InvalidPartialSignerBump)
             }
         }
 
@@ -542,12 +541,11 @@ fn do_execute_transaction(ctx: Context<ExecuteTransaction>, wallet_seed: &[&[u8]
     for ix in ctx.accounts.transaction.instructions.iter() {     
         let seeds: &Vec<Vec<_>> = &ix.partial_signers.iter()
             .map(|signer| vec![
-                    b"GokiSmartWalletPartialSigner" as &[u8],   
-                    smart_wallet.key.as_ref(),
-                    bytemuck::bytes_of(&signer.index),
-                    &signer.bump
-                ]
-            )
+                b"GokiSmartWalletPartialSigner" as &[u8],
+                smart_wallet.key.as_ref(),
+                bytemuck::bytes_of(&signer.index),
+                bytemuck::bytes_of(&signer.bump)
+            ])
             .collect::<Vec<Vec<_>>>();
 
         let seeds2 = seeds;

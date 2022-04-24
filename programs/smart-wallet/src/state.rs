@@ -174,7 +174,7 @@ pub struct PartialSigner {
     /// The partial signer index seed
     pub index: u64,
     /// The partial signer bump seed
-    pub bump: [u8; 1],
+    pub bump: u8,
 }
 
 /// Type of Subaccount.
