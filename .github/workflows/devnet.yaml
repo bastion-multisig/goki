@@ -1,0 +1,94 @@
+name: Devnet Deployment
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "programs/**/*.rs"
+      - "programs/**/*.toml"
+      - "tests/**/*.ts"
+  workflow_dispatch: {}
+
+env:
+  ANCHOR_CLI_VERSION: 0.24.2
+  SOLANA_CLI_VERSION: 1.9.12
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Install Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Cache
+        uses: actions/cache@v2
+        with:
+          key: cache-${{ runner.os }}-a${{ env.ANCHOR_CLI_VERSION }}-s${{ env.SOLANA_CLI_VERSION }}
+          path: |
+            ~/.cache/solana
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ~/.local/share/solana/
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Install Solana
+        run: sh -c "$(curl -sSfL https://release.solana.com/v${{ env.SOLANA_CLI_VERSION }}/install)"
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Recover Cache
+        uses: actions/cache@v2
+        with:
+          key: cache-${{ runner.os }}-a${{ env.ANCHOR_CLI_VERSION }}-s${{ env.SOLANA_CLI_VERSION }}
+          path: |
+            ~/.cache/solana
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ~/.local/share/solana/
+
+      - name: Install Linux Dependencies
+        run: sudo apt-get update && sudo apt-get -y install pkg-config build-essential libudev-dev
+
+      - name: Setup NPM
+        uses: actions/setup-node@v2
+
+      - name: Install Anchor CLI
+        run: npm i -g @project-serum/anchor-cli@${{ env.ANCHOR_CLI_VERSION }}
+
+      - name: Setup Environment
+        run: |
+          echo "PATH=$HOME/.local/share/solana/install/active_release/bin:$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV \
+          && mkdir -p ~/.config/solana \
+          && mkdir -p ./target/deploy \
+          && echo ${{ secrets.SOLANA_DEVNET_DEPLOYER_KEYPAIR }} > ~/.config/solana/deployer.json \
+          && echo ${{ secrets.SMART_WALLET_PROGRAM_KEYPAIR }} > ./target/deploy/smart_wallet-keypair.json
+
+      - name: Build Programs
+        run: |
+          npm install
+          solana-keygen new --no-bip39-passphrase
+          anchor build
+
+      - name: Deploy Smart Wallet
+        run: |
+          anchor deploy --program-name smart-wallet --provider.cluster devnet --provider.wallet ~/.config/solana/deployer.json
+          anchor idl upgrade -f ./target/idl/smart_wallet.json 2tS1VHB9y4YuYA6MMwqUYnUXTeHpFvAV7uGpJ5QkE48L --provider.cluster devnet --provider.wallet ~/.config/solana/deployer.json

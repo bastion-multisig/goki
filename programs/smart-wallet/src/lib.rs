@@ -47,7 +47,7 @@ pub const DEFAULT_GRACE_PERIOD: i64 = 14 * SECONDS_PER_DAY;
 /// Constant declaring that there is no ETA of the transaction.
 pub const NO_ETA: i64 = -1;
 
-declare_id!("GokivDYuQXPZCWRkwMhdH2h91KpDQXBEmpgBgs55bnpH");
+declare_id!("2tS1VHB9y4YuYA6MMwqUYnUXTeHpFvAV7uGpJ5QkE48L");
 
 #[program]
 #[deny(missing_docs)]

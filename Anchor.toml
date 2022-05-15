@@ -14,18 +14,5 @@ wallet = "./tests/test-key.json"
 [scripts]
 test = "yarn mocha -b"
 
-[programs.mainnet]
-smart_wallet = "GokivDYuQXPZCWRkwMhdH2h91KpDQXBEmpgBgs55bnpH"
-token_signer = "NFTUJzSHuUCsMMqMRJpB7PmbsaU7Wm51acdPk2FXMLn"
-
 [programs.devnet]
-smart_wallet = "GokivDYuQXPZCWRkwMhdH2h91KpDQXBEmpgBgs55bnpH"
-token_signer = "NFTUJzSHuUCsMMqMRJpB7PmbsaU7Wm51acdPk2FXMLn"
-
-[programs.testnet]
-smart_wallet = "GokivDYuQXPZCWRkwMhdH2h91KpDQXBEmpgBgs55bnpH"
-token_signer = "NFTUJzSHuUCsMMqMRJpB7PmbsaU7Wm51acdPk2FXMLn"
-
-[programs.localnet]
-smart_wallet = "GokivDYuQXPZCWRkwMhdH2h91KpDQXBEmpgBgs55bnpH"
-token_signer = "NFTUJzSHuUCsMMqMRJpB7PmbsaU7Wm51acdPk2FXMLn"
+smart_wallet = "2tS1VHB9y4YuYA6MMwqUYnUXTeHpFvAV7uGpJ5QkE48L"
