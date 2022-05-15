@@ -79,7 +79,8 @@ jobs:
           echo "PATH=$HOME/.local/share/solana/install/active_release/bin:$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV \
           && mkdir -p ~/.config/solana \
           && mkdir -p ./target/deploy \
-          && echo ${{ secrets.SOLANA_DEVNET_DEPLOYER_KEYPAIR }} > ~/.config/solana/deployer.json
+          && echo ${{ secrets.SOLANA_DEVNET_DEPLOYER_KEYPAIR }} > ~/.config/solana/deployer.json \
+          && echo ${{ secrets.SMART_WALLET_PROGRAM_KEYPAIR }} > ./target/deploy/smart_wallet-keypair.json
 
       - name: Build Programs
         run: |
@@ -89,5 +90,5 @@ jobs:
 
       - name: Deploy Smart Wallet
         run: |
-          solana program deploy -u d --upgrade-authority ~/.config/solana/deployer.json --program-id 2tS1VHB9y4YuYA6MMwqUYnUXTeHpFvAV7uGpJ5QkE48L target/deploy/smart_wallet.so
+          anchor deploy --program-name smart-wallet --provider.cluster devnet --provider.wallet ~/.config/solana/deployer.json
           anchor idl upgrade -f ./target/idl/smart_wallet.json 2tS1VHB9y4YuYA6MMwqUYnUXTeHpFvAV7uGpJ5QkE48L --provider.cluster devnet --provider.wallet ~/.config/solana/deployer.json
