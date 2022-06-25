@@ -8,24 +8,24 @@ seeds = true
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
-wallet = "./tests/test-key.json"
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn mocha -b"
 
 [programs.mainnet]
-smart_wallet = "GokivDYuQXPZCWRkwMhdH2h91KpDQXBEmpgBgs55bnpH"
+smart_wallet = "oGGQGGbVsdTR1DLkCQoj7Uee3RNBTr9vWtxUZgPMnDi"
 token_signer = "NFTUJzSHuUCsMMqMRJpB7PmbsaU7Wm51acdPk2FXMLn"
 
 [programs.devnet]
-smart_wallet = "GokivDYuQXPZCWRkwMhdH2h91KpDQXBEmpgBgs55bnpH"
+smart_wallet = "oGGQGGbVsdTR1DLkCQoj7Uee3RNBTr9vWtxUZgPMnDi"
 token_signer = "NFTUJzSHuUCsMMqMRJpB7PmbsaU7Wm51acdPk2FXMLn"
 
 [programs.testnet]
-smart_wallet = "GokivDYuQXPZCWRkwMhdH2h91KpDQXBEmpgBgs55bnpH"
+smart_wallet = "oGGQGGbVsdTR1DLkCQoj7Uee3RNBTr9vWtxUZgPMnDi"
 token_signer = "NFTUJzSHuUCsMMqMRJpB7PmbsaU7Wm51acdPk2FXMLn"
 
 [programs.localnet]
-smart_wallet = "GokivDYuQXPZCWRkwMhdH2h91KpDQXBEmpgBgs55bnpH"
+smart_wallet = "oGGQGGbVsdTR1DLkCQoj7Uee3RNBTr9vWtxUZgPMnDi"
 token_signer = "NFTUJzSHuUCsMMqMRJpB7PmbsaU7Wm51acdPk2FXMLn"

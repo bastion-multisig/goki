@@ -9,6 +9,7 @@ use vipers::program_err;
 /// A [SmartWallet] is a multisig wallet with Timelock capabilities.
 #[account]
 #[derive(Default, Debug, PartialEq)]
+#[repr(C)]
 pub struct SmartWallet {
     /// Base used to derive.
     pub base: Pubkey,
@@ -63,6 +64,7 @@ impl SmartWallet {
 /// by a [SmartWallet].
 #[account]
 #[derive(Debug, Default, PartialEq)]
+#[repr(C)]
 pub struct Transaction {
     /// The [SmartWallet] account this transaction belongs to.
     pub smart_wallet: Pubkey,
@@ -109,7 +111,8 @@ impl Transaction {
 }
 
 /// Instruction.
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, Default, PartialEq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
+#[repr(C)]
 pub struct TXInstruction {
     /// Pubkey of the instruction processor that executes this instruction
     pub program_id: Pubkey,
@@ -132,7 +135,8 @@ impl TXInstruction {
 }
 
 /// Account metadata used to define [TXInstruction]s
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Copy, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Debug, PartialEq)]
+#[repr(C)]
 pub struct TXAccountMeta {
     /// An account's public key
     pub pubkey: Pubkey,
@@ -169,7 +173,8 @@ impl From<TXAccountMeta> for solana_program::instruction::AccountMeta {
 }
 
 /// A partial signer that signs things for a [SmartWallet]
-#[derive(AnchorSerialize, AnchorDeserialize, Debug, PartialEq, Copy, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Debug, PartialEq)]
+#[repr(C)]
 pub struct PartialSigner {
     /// The partial signer index seed
     pub index: u64,
@@ -181,7 +186,7 @@ pub struct PartialSigner {
 #[derive(
     AnchorSerialize, AnchorDeserialize, Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord,
 )]
-#[repr(u8)]
+#[repr(C)]
 pub enum SubaccountType {
     /// Requires the normal multisig approval process.
     Derived = 0,
@@ -198,6 +203,7 @@ impl Default for SubaccountType {
 /// Mapping of a Subaccount to its [SmartWallet].
 #[account]
 #[derive(Copy, Default, Debug, PartialEq, Eq)]
+#[repr(C)]
 pub struct SubaccountInfo {
     /// Smart wallet of the sub-account.
     pub smart_wallet: Pubkey,
@@ -215,6 +221,7 @@ impl SubaccountInfo {
 /// An account which holds an array of TxInstructions to be executed.
 #[account]
 #[derive(Default, Debug, PartialEq)]
+#[repr(C)]
 pub struct InstructionBuffer {
     /// Sequence of the ownership set.
     ///
@@ -270,7 +277,8 @@ impl InstructionBuffer {
 }
 
 /// Container holding a bundle of instructions.
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, Default, PartialEq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
+#[repr(C)]
 pub struct InstructionBundle {
     /// Execution counter on the [InstructionBundle].
     pub is_executed: bool,

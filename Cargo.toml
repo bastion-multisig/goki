@@ -1,5 +1,5 @@
 [workspace]
-members = ["programs/*"]
+members = ["programs/smart-wallet", "programs/token-signer"]
 
 [profile.release]
 lto = "fat"
