@@ -138,7 +138,7 @@ pub mod smart_wallet {
     pub fn create_transaction(
         ctx: Context<CreateTransaction>,
         bump: u8,
-        instructions: Vec<TXInstruction>,
+        instructions: Vec<TXInstructionArg>,
     ) -> Result<()> {
         create_transaction_with_timelock(ctx, bump, instructions, NO_ETA)
     }
@@ -148,7 +148,7 @@ pub mod smart_wallet {
     pub fn create_transaction_with_timelock(
         ctx: Context<CreateTransaction>,
         _bump: u8,
-        instructions: Vec<TXInstruction>,
+        instructions: Vec<TXInstructionArg>,
         eta: i64,
     ) -> Result<()> {
         let smart_wallet = &ctx.accounts.smart_wallet;
@@ -172,11 +172,14 @@ pub mod smart_wallet {
         // validate partial signer seeds
         for ix in instructions.iter() {
             for signer in ix.partial_signers.iter() {
-                let (_partial_signer, partial_signer_bump) = Pubkey::find_program_address(&[
-                    b"GokiSmartWalletPartialSigner" as &[u8],   
-                    smart_wallet.key().as_ref(),
-                    bytemuck::bytes_of(&signer.index)
-                ], ctx.program_id);
+                let (_partial_signer, partial_signer_bump) = Pubkey::find_program_address(
+                    &[
+                        b"GokiSmartWalletPartialSigner" as &[u8],
+                        smart_wallet.key().as_ref(),
+                        bytemuck::bytes_of(&signer.index),
+                    ],
+                    ctx.program_id,
+                );
 
                 invariant!(partial_signer_bump == signer.bump, InvalidPartialSignerBump)
             }
@@ -197,9 +200,19 @@ pub mod smart_wallet {
         tx.smart_wallet = smart_wallet.key();
         tx.index = index;
         tx.bump = *unwrap_int!(ctx.bumps.get("transaction"));
-
         tx.proposer = ctx.accounts.proposer.key();
-        tx.instructions = instructions.clone();
+
+        let mut accounts_iter = ctx.remaining_accounts.iter();
+        tx.instructions = Vec::with_capacity(instructions.len());
+        for (ix_arg, ix) in instructions.iter().zip(tx.instructions.iter_mut()) {
+            ix.program_id = accounts_iter.next().unwrap().key.clone();
+            for _ in 1..ix_arg.keys_count {
+                ix.keys.push(accounts_iter.next().unwrap().into())
+            }
+            ix.data = ix_arg.data.clone();
+            ix.partial_signers = ix_arg.partial_signers.clone();
+        }
+
         tx.signers = signers;
         tx.owner_set_seqno = smart_wallet.owner_set_seqno;
         tx.eta = eta;
@@ -209,9 +222,9 @@ pub mod smart_wallet {
 
         emit!(TransactionCreateEvent {
             smart_wallet: ctx.accounts.smart_wallet.key(),
-            transaction: ctx.accounts.transaction.key(),
+            transaction: tx.key().clone(),
             proposer: ctx.accounts.proposer.key(),
-            instructions,
+            instructions: tx.instructions.clone(),
             eta,
             timestamp: Clock::get()?.unix_timestamp
         });
@@ -538,14 +551,18 @@ pub struct CreateSubaccountInfo<'info> {
 
 fn do_execute_transaction(ctx: Context<ExecuteTransaction>, wallet_seed: &[&[u8]]) -> Result<()> {
     let smart_wallet = ctx.accounts.smart_wallet.to_account_info();
-    for ix in ctx.accounts.transaction.instructions.iter() {     
-        let seeds: &Vec<Vec<_>> = &ix.partial_signers.iter()
-            .map(|signer| vec![
-                b"GokiSmartWalletPartialSigner" as &[u8],
-                smart_wallet.key.as_ref(),
-                bytemuck::bytes_of(&signer.index),
-                bytemuck::bytes_of(&signer.bump)
-            ])
+    for ix in ctx.accounts.transaction.instructions.iter() {
+        let seeds: &Vec<Vec<_>> = &ix
+            .partial_signers
+            .iter()
+            .map(|signer| {
+                vec![
+                    b"GokiSmartWalletPartialSigner" as &[u8],
+                    smart_wallet.key.as_ref(),
+                    bytemuck::bytes_of(&signer.index),
+                    bytemuck::bytes_of(&signer.bump),
+                ]
+            })
             .collect::<Vec<Vec<_>>>();
 
         let seeds2 = seeds;

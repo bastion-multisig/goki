@@ -121,7 +121,19 @@ pub struct TXInstruction {
     /// Opaque data passed to the instruction processor
     pub data: Vec<u8>,
     /// Additional addresses that sign for things for a [SmartWallet]
-    pub partial_signers: Vec<PartialSigner>
+    pub partial_signers: Vec<PartialSigner>,
+}
+
+/// Instruction.
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
+#[repr(C)]
+pub struct TXInstructionArg {
+    /// Number of keys should be passed to the instruction processor
+    pub keys_count: u8,
+    /// Opaque data passed to the instruction processor
+    pub data: Vec<u8>,
+    /// Additional addresses that sign for things for a [SmartWallet]
+    pub partial_signers: Vec<PartialSigner>,
 }
 
 impl TXInstruction {
@@ -144,6 +156,16 @@ pub struct TXAccountMeta {
     pub is_signer: bool,
     /// True if the `pubkey` can be loaded as a read-write account.
     pub is_writable: bool,
+}
+
+impl From<&AccountInfo<'_>> for TXAccountMeta {
+    fn from(account: &AccountInfo<'_>) -> TXAccountMeta {
+        TXAccountMeta {
+            pubkey: account.key.clone(),
+            is_signer: account.is_signer,
+            is_writable: account.is_writable,
+        }
+    }
 }
 
 impl From<&TXInstruction> for solana_program::instruction::Instruction {
