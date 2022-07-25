@@ -15,17 +15,17 @@ wallet = "~/.config/solana/id.json"
 test = "yarn mocha -b"
 
 [programs.mainnet]
-smart_wallet = "oGGQGGbVsdTR1DLkCQoj7Uee3RNBTr9vWtxUZgPMnDi"
+smart_wallet = "BXY7CPSCWkyTanQiwq2kHpC6nQWrpSwJYQbW7aihuGyG"
 token_signer = "NFTUJzSHuUCsMMqMRJpB7PmbsaU7Wm51acdPk2FXMLn"
 
 [programs.devnet]
-smart_wallet = "oGGQGGbVsdTR1DLkCQoj7Uee3RNBTr9vWtxUZgPMnDi"
+smart_wallet = "BXY7CPSCWkyTanQiwq2kHpC6nQWrpSwJYQbW7aihuGyG"
 token_signer = "NFTUJzSHuUCsMMqMRJpB7PmbsaU7Wm51acdPk2FXMLn"
 
 [programs.testnet]
-smart_wallet = "oGGQGGbVsdTR1DLkCQoj7Uee3RNBTr9vWtxUZgPMnDi"
+smart_wallet = "BXY7CPSCWkyTanQiwq2kHpC6nQWrpSwJYQbW7aihuGyG"
 token_signer = "NFTUJzSHuUCsMMqMRJpB7PmbsaU7Wm51acdPk2FXMLn"
 
 [programs.localnet]
-smart_wallet = "oGGQGGbVsdTR1DLkCQoj7Uee3RNBTr9vWtxUZgPMnDi"
+smart_wallet = "BXY7CPSCWkyTanQiwq2kHpC6nQWrpSwJYQbW7aihuGyG"
 token_signer = "NFTUJzSHuUCsMMqMRJpB7PmbsaU7Wm51acdPk2FXMLn"
