@@ -97,11 +97,11 @@ pub struct Transaction {
 
 impl Transaction {
     /// Computes the space a [Transaction] uses.
-    pub fn space(instructions: Vec<TXInstruction>) -> usize {
+    pub fn space(instructions: Vec<TXInstructionArg>) -> usize {
         4  // Anchor discriminator
             + std::mem::size_of::<Transaction>()
             + 4 // Vec discriminator
-            + (instructions.iter().map(|ix| ix.space()).sum::<usize>())
+            + (instructions.iter().map(|ix| TXInstruction::space(ix)).sum::<usize>())
     }
 
     /// Number of signers.
@@ -124,25 +124,13 @@ pub struct TXInstruction {
     pub partial_signers: Vec<PartialSigner>,
 }
 
-/// Instruction.
-#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
-#[repr(C)]
-pub struct TXInstructionArg {
-    /// Number of keys should be passed to the instruction processor
-    pub keys_count: u8,
-    /// Opaque data passed to the instruction processor
-    pub data: Vec<u8>,
-    /// Additional addresses that sign for things for a [SmartWallet]
-    pub partial_signers: Vec<PartialSigner>,
-}
-
 impl TXInstruction {
     /// Space that a [TXInstruction] takes up.
-    pub fn space(&self) -> usize {
+    pub fn space(instruction: &TXInstructionArg) -> usize {
         std::mem::size_of::<Pubkey>()
-            + (self.keys.len() as usize) * std::mem::size_of::<TXAccountMeta>()
-            + (self.data.len() as usize)
-            + (self.partial_signers.len() as usize) * std::mem::size_of::<PartialSigner>()
+            + (instruction.keys.len() as usize) * std::mem::size_of::<TXAccountMeta>()
+            + (instruction.data.len() as usize)
+            + (instruction.partial_signers.len() as usize) * std::mem::size_of::<PartialSigner>()
     }
 }
 
@@ -158,14 +146,26 @@ pub struct TXAccountMeta {
     pub is_writable: bool,
 }
 
-impl From<&AccountInfo<'_>> for TXAccountMeta {
-    fn from(account: &AccountInfo<'_>) -> TXAccountMeta {
-        TXAccountMeta {
-            pubkey: account.key.clone(),
-            is_signer: account.is_signer,
-            is_writable: account.is_writable,
-        }
-    }
+/// Instruction.
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
+#[repr(C)]
+pub struct TXInstructionArg {
+    /// Number of keys should be passed to the instruction processor
+    pub keys: Vec<TXAccountMetaArg>,
+    /// Opaque data passed to the instruction processor
+    pub data: Vec<u8>,
+    /// Additional addresses that sign for things for a [SmartWallet]
+    pub partial_signers: Vec<PartialSigner>,
+}
+
+/// Account metadata used to define [TXInstructionArg]s
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Copy, Clone, Debug, PartialEq)]
+#[repr(C)]
+pub struct TXAccountMetaArg {
+    /// True if an Instruction requires a Transaction signature matching `pubkey`.
+    pub is_signer: bool,
+    /// True if the `pubkey` can be loaded as a read-write account.
+    pub is_writable: bool,
 }
 
 impl From<&TXInstruction> for solana_program::instruction::Instruction {

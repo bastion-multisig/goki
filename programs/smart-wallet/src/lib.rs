@@ -204,14 +204,23 @@ pub mod smart_wallet {
 
         let mut accounts_iter = ctx.remaining_accounts.iter();
         tx.instructions = Vec::with_capacity(instructions.len());
-        for (ix_arg, ix) in instructions.iter().zip(tx.instructions.iter_mut()) {
-            ix.program_id = accounts_iter.next().unwrap().key.clone();
-            for _ in 1..ix_arg.keys_count {
-                ix.keys.push(accounts_iter.next().unwrap().into())
-            }
-            ix.data = ix_arg.data.clone();
-            ix.partial_signers = ix_arg.partial_signers.clone();
-        }
+        tx.instructions = instructions
+            .iter()
+            .map(|ix| TXInstruction {
+                program_id: accounts_iter.next().unwrap().key.clone(),
+                keys: ix
+                    .keys
+                    .iter()
+                    .map(|key| TXAccountMeta {
+                        pubkey: accounts_iter.next().unwrap().key(),
+                        is_signer: key.is_signer,
+                        is_writable: key.is_writable,
+                    })
+                    .collect(),
+                data: ix.data.clone(),
+                partial_signers: ix.partial_signers.clone(),
+            })
+            .collect();
 
         tx.signers = signers;
         tx.owner_set_seqno = smart_wallet.owner_set_seqno;
@@ -478,7 +487,7 @@ pub struct Auth<'info> {
 
 /// Accounts for [smart_wallet::create_transaction].
 #[derive(Accounts)]
-#[instruction(bump: u8, instructions: Vec<TXInstruction>)]
+#[instruction(bump: u8, instructions: Vec<TXInstructionArg>)]
 pub struct CreateTransaction<'info> {
     /// The [SmartWallet].
     #[account(mut)]
