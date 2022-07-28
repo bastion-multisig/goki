@@ -58,6 +58,12 @@ impl SmartWallet {
     pub fn try_owner_index(&self, key: Pubkey) -> Result<usize> {
         Ok(unwrap_opt!(self.owner_index_opt(key), InvalidOwner))
     }
+
+    /// Ensures max_owners is within the program limit
+    pub fn is_max_owners_in_range(max_owners: u8) -> Result<()> {
+        require!(max_owners <= crate::MAX_OWNERS, TooManyOwners);
+        Ok(())
+    }
 }
 
 /// A [Transaction] is a series of instructions that may be executed
@@ -100,7 +106,8 @@ impl Transaction {
     pub fn space(instructions: Vec<TXInstructionArg>) -> usize {
         4  // Anchor discriminator
             + std::mem::size_of::<Transaction>()
-            + 4 // Vec discriminator
+            + 8 // 2 * Vec length
+            + usize::from(crate::MAX_OWNERS) // 1 byte per signers boolean 
             + (instructions.iter().map(|ix| TXInstruction::space(ix)).sum::<usize>())
     }
 
@@ -128,6 +135,7 @@ impl TXInstruction {
     /// Space that a [TXInstruction] takes up.
     pub fn space(instruction: &TXInstructionArg) -> usize {
         std::mem::size_of::<Pubkey>()
+            + 12 // 3 * Vec length
             + (instruction.keys.len() as usize) * std::mem::size_of::<TXAccountMeta>()
             + (instruction.data.len() as usize)
             + (instruction.partial_signers.len() as usize) * std::mem::size_of::<PartialSigner>()

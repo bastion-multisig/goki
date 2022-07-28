@@ -47,6 +47,9 @@ pub const DEFAULT_GRACE_PERIOD: i64 = 14 * SECONDS_PER_DAY;
 /// Constant declaring that there is no ETA of the transaction.
 pub const NO_ETA: i64 = -1;
 
+/// Max number of owners supported by the program
+pub const MAX_OWNERS: u8 = 16u8;
+
 declare_id!("BXY7CPSCWkyTanQiwq2kHpC6nQWrpSwJYQbW7aihuGyG");
 
 #[program]
@@ -69,6 +72,8 @@ pub mod smart_wallet {
         invariant!(minimum_delay < MAX_DELAY_SECONDS, DelayTooHigh);
 
         invariant!((max_owners as usize) >= owners.len(), "max_owners");
+
+        SmartWallet::is_max_owners_in_range(max_owners)?;
 
         let smart_wallet = &mut ctx.accounts.smart_wallet;
         smart_wallet.base = ctx.accounts.base.key();
@@ -630,4 +635,6 @@ pub enum ErrorCode {
     BufferBundleExecuted,
     #[msg("Partial signer seeds do not lead to the provided bump.")]
     InvalidPartialSignerBump,
+    #[msg("Too many owners.")]
+    TooManyOwners,
 }
