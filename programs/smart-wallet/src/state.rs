@@ -43,9 +43,10 @@ pub struct SmartWallet {
 impl SmartWallet {
     /// Computes the space a [SmartWallet] uses.
     pub fn space(max_owners: u8) -> usize {
-        4 // Anchor discriminator
+        8 // Anchor discriminator
             + std::mem::size_of::<SmartWallet>()
-            + 4 // 4 = the Vec discriminator
+            - std::mem::size_of::<usize>() // Subtract the Vec pointer
+            + 4 // Vec length
             + std::mem::size_of::<Pubkey>() * (max_owners as usize)
     }
 
@@ -104,8 +105,9 @@ pub struct Transaction {
 impl Transaction {
     /// Computes the space a [Transaction] uses.
     pub fn space(instructions: Vec<TXInstructionArg>) -> usize {
-        4  // Anchor discriminator
+        8  // Anchor discriminator
             + std::mem::size_of::<Transaction>()
+            - std::mem::size_of::<usize>() * 2 // Subtract 2* Vec pointer
             + 8 // 2 * Vec length
             + usize::from(crate::MAX_OWNERS) // 1 byte per signers boolean 
             + (instructions.iter().map(|ix| TXInstruction::space(ix)).sum::<usize>())
