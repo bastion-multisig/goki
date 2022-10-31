@@ -22,4 +22,4 @@ default = []
 [dependencies]
 anchor-lang = ">=0.22, <=0.24"
 vipers = "^2.0"
-bytemuck = "^1.9.1"
+bytemuck = "^1.12.2"
